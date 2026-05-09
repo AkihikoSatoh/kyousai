@@ -723,15 +723,37 @@ function jumpToTerm(termName) {
 }
 
 // ── 初期化 ──
-loadTerms();
-
-['person', 'matter'].forEach(function(tab) {
-  renderGojuonRowsFor(tab);
-  renderIndexListFor(tab);
-  document.querySelector('[data-cat-for="' + tab + '"]').onchange = function() {
+function initGlossary() {
+  loadTerms();
+  ['person', 'matter'].forEach(function(tab) {
+    renderGojuonRowsFor(tab);
     renderIndexListFor(tab);
-  };
-});
+    document.querySelector('[data-cat-for="' + tab + '"]').onchange = function() {
+      renderIndexListFor(tab);
+    };
+  });
+}
+
+(function bootstrap() {
+  function isEmpty() {
+    try {
+      var s = localStorage.getItem(STORAGE_KEY);
+      if (!s) return true;
+      var arr = JSON.parse(s);
+      return !Array.isArray(arr) || arr.length === 0;
+    } catch (e) { return true; }
+  }
+  if (!isEmpty()) { initGlossary(); return; }
+  fetch('glossary-data.json', { cache: 'no-cache' })
+    .then(function(r) { return r.ok ? r.json() : Promise.reject(); })
+    .then(function(data) {
+      if (Array.isArray(data) && data.length > 0) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      }
+    })
+    .catch(function() {})
+    .then(function() { initGlossary(); });
+})();
 </script>
 </body>
 </html>

@@ -1154,9 +1154,32 @@ function importTerms(event) {
 }
 
 // ── 初期化 ──
-loadTerms();
-updateInfo();
-renderList();
+function initGlossaryAdmin() {
+  loadTerms();
+  updateInfo();
+  renderList();
+}
+
+(function bootstrap() {
+  function isEmpty() {
+    try {
+      var s = localStorage.getItem(STORAGE_KEY);
+      if (!s) return true;
+      var arr = JSON.parse(s);
+      return !Array.isArray(arr) || arr.length === 0;
+    } catch (e) { return true; }
+  }
+  if (!isEmpty()) { initGlossaryAdmin(); return; }
+  fetch('glossary-data.json', { cache: 'no-cache' })
+    .then(function(r) { return r.ok ? r.json() : Promise.reject(); })
+    .then(function(data) {
+      if (Array.isArray(data) && data.length > 0) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      }
+    })
+    .catch(function() {})
+    .then(function() { initGlossaryAdmin(); });
+})();
 </script>
 </body>
 </html>
